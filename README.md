@@ -359,7 +359,7 @@ local function LoadCheat()
                                 part.Size = Vector3.new(Config.HitboxSize, Config.HitboxSize, Config.HitboxSize)
                                 part.CanCollide = false
                                 if Config.ShowHitbox then
-                                    part.Transparency = 0.6 
+                                    part.Transparency = 0.85 
                                     part.Material = Enum.Material.ForceField
                                     local isVis = CheckVisibility(p.Character.Head)
                                     part.Color = isVis and GetRainbowColor() or Color3.fromRGB(255,0,0)
