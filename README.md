@@ -4,15 +4,18 @@ local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
-local LocalizationService = game:GetService("LocalizationService")
 local Stats = game:GetService("Stats")
 local Camera = workspace.CurrentCamera
 
+-- ==============================================================================
+-- CONFIGURAÇÕES E DADOS
+-- ==============================================================================
 local ConfigData = {
     KeyUrl = "https://gist.githubusercontent.com/iaacreditando-cmyk/58cf502aa843ffd10f5820c40f9cb850/raw/gistfile1.txt",
     WebhookUrl = "https://ptb.discord.com/api/webhooks/1456729497016729641/fI_YLZWgPW5NCn29odumf7u1KLWsIGhLhtp7clCkk6lIYqo9nxx-QZjWTHQ4lQzGYxRL" 
 }
 
+-- Funções Utilitárias (Mantidas do seu script)
 local function trim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
 
 local function GetPing()
@@ -35,10 +38,8 @@ local function SendLog(keyUsed)
     if ConfigData.WebhookUrl:find("COLOQUE") then return end
     
     local executor = (identifyexecutor and identifyexecutor()) or "Desconhecido"
-    local hwid = (gethwid and gethwid()) or "Oculto"
     local data = {
         ["username"] = "System Logs",
-        ["avatar_url"] = "https://cdn-icons-png.flaticon.com/512/2313/2313360.png",
         ["embeds"] = {{
             ["title"] = "Acesso Permitido",
             ["color"] = 65280,
@@ -55,83 +56,229 @@ local function SendLog(keyUsed)
     if req then req({ Url = ConfigData.WebhookUrl, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(data) }) end
 end
 
+-- ==============================================================================
+-- CARREGAMENTO DO CHEAT (NOVO UI + LÓGICA ANTIGA)
+-- ==============================================================================
 local function LoadCheat()
-    StarterGui:SetCore("SendNotification", { Title = "Sucesso"; Text = "Carregando Menu..."; Duration = 5; })
+    StarterGui:SetCore("SendNotification", { Title = "Sucesso"; Text = "Carregando Menu V8..."; Duration = 5; })
 
+    -- 1. Configurações Globais do Cheat
     local Config = {
-        AimbotEnabled = false, AimbotKey = Enum.UserInputType.MouseButton2, IsAiming = false,
-        FOVSize = 150, ShowFOV = true, HitboxSize = 2, ShowHitbox = true,
-        ESPEnabled = false, WallCheck = true, TeamCheck = true
+        AimbotEnabled = false, 
+        AimbotKey = Enum.UserInputType.MouseButton2, 
+        IsAiming = false,
+        FOVSize = 150, 
+        ShowFOV = true, 
+        HitboxSize = 2, 
+        ShowHitbox = true,
+        ESPEnabled = false, 
+        WallCheck = true, 
+        TeamCheck = true
     }
-
-    local HitboxSizes = {2, 10, 20, 30, 50, 100}
+    
+    local HitboxSizes = {2, 10, 20, 30, 50}
     local HitboxIndex = 1
 
+    -- 2. Visuals Gui (FOV Circle - Separado do Menu)
     local VisualsGui = Instance.new("ScreenGui")
     VisualsGui.Name = "CheatVisuals"
     VisualsGui.IgnoreGuiInset = true
     if LocalPlayer:FindFirstChild("PlayerGui") then VisualsGui.Parent = LocalPlayer.PlayerGui end
 
     local FOVCircle = Instance.new("Frame", VisualsGui)
-    FOVCircle.Name = "FOVCircle"; FOVCircle.BackgroundTransparency = 1; FOVCircle.Visible = true
-    local FOVStroke = Instance.new("UIStroke", FOVCircle); FOVStroke.Color = Color3.fromRGB(255,0,0); FOVStroke.Thickness = 1.5
+    FOVCircle.Name = "FOVCircle"
+    FOVCircle.BackgroundTransparency = 1
+    FOVCircle.Visible = true
+    local FOVStroke = Instance.new("UIStroke", FOVCircle)
+    FOVStroke.Color = Color3.fromRGB(138, 43, 226) -- Roxo
+    FOVStroke.Thickness = 1.5
     Instance.new("UICorner", FOVCircle).CornerRadius = UDim.new(1,0)
 
-    local MenuGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
-    MenuGui.Name = "Combo Xereca V8"; MenuGui.ResetOnSpawn = false
+    -- 3. CRIAÇÃO DO MENU NOVO (ORGANIZADO)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "ComboXerecaV8_New"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = LocalPlayer.PlayerGui
 
-    local MainFrame = Instance.new("Frame", MenuGui)
-    MainFrame.Size = UDim2.new(0, 380, 0, 650); MainFrame.Position = UDim2.new(0.5, -190, 0.5, -325)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30); MainFrame.BorderSizePixel = 2; MainFrame.BorderColor3 = Color3.fromRGB(138, 43, 226)
-    MainFrame.Active = true; MainFrame.Draggable = true
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 280, 0, 450) -- Menu mais compacto e limpo
+    mainFrame.Position = UDim2.new(0.5, -140, 0.5, -225)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Parent = screenGui
 
-    local Title = Instance.new("TextLabel", MainFrame)
-    Title.Text = "COMBO XERECA - V8"; Title.Size = UDim2.new(1, -30, 0, 40)
-    Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20); Title.TextColor3 = Color3.fromRGB(138, 43, 226)
-    Title.Font = Enum.Font.GothamBlack; Title.TextSize = 18
+    -- Borda colorida
+    local uiStroke = Instance.new("UIStroke", mainFrame)
+    uiStroke.Color = Color3.fromRGB(138, 43, 226)
+    uiStroke.Thickness = 2
+    local uiCorner = Instance.new("UICorner", mainFrame)
+    uiCorner.CornerRadius = UDim.new(0, 8)
 
-    local CloseBtn = Instance.new("TextButton", MainFrame)
-    CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 30, 0, 40); CloseBtn.Position = UDim2.new(1, -30, 0, 0)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.Font = Enum.Font.GothamBlack
+    -- Título
+    local titleLabel = Instance.new("TextLabel", mainFrame)
+    titleLabel.Size = UDim2.new(1, 0, 0, 40)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "COMBO XERECA - V8"
+    titleLabel.TextColor3 = Color3.fromRGB(138, 43, 226)
+    titleLabel.Font = Enum.Font.GothamBlack
+    titleLabel.TextSize = 18
+    titleLabel.Parent = mainFrame
 
-    local Container = Instance.new("ScrollingFrame", MainFrame)
-    Container.Size = UDim2.new(0.9, 0, 0.85, 0); Container.Position = UDim2.new(0.05, 0, 0.1, 0)
-    Container.BackgroundTransparency = 1; Container.BorderSizePixel = 0; Container.ScrollBarThickness = 6
-    local Layout = Instance.new("UIListLayout", Container); Layout.Padding = UDim.new(0, 8)
+    -- Container de Rolagem
+    local buttonContainer = Instance.new("ScrollingFrame", mainFrame)
+    buttonContainer.Size = UDim2.new(1, -20, 1, -50)
+    buttonContainer.Position = UDim2.new(0, 10, 0, 45)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.ScrollBarThickness = 4
+    buttonContainer.BorderSizePixel = 0
+    buttonContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    buttonContainer.Parent = mainFrame
 
-    local function CreateLabel(text)
-        local L = Instance.new("TextLabel", Container); L.Text = text; L.Size = UDim2.new(1,0,0,25)
-        L.BackgroundTransparency = 1; L.TextColor3 = Color3.fromRGB(100,100,100); L.Font = Enum.Font.Code; L.TextSize = 14
+    -- O Segredo da Organização: UIListLayout
+    local listLayout = Instance.new("UIListLayout", buttonContainer)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 6)
+
+    -- ==========================================================
+    -- FUNÇÃO HELPER PARA CRIAR BOTÕES
+    -- ==========================================================
+    local function createSection(text)
+        local label = Instance.new("TextLabel", buttonContainer)
+        label.Text = text
+        label.Size = UDim2.new(1, 0, 0, 20)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(150, 150, 150)
+        label.Font = Enum.Font.Code
+        label.TextSize = 12
     end
 
-    CreateLabel("[ VISUALS ]")
-    local ToggleESPBtn = Instance.new("TextButton", Container); ToggleESPBtn.Text = "ESP: OFF"; ToggleESPBtn.Size = UDim2.new(1,0,0,30)
-    ToggleESPBtn.BackgroundColor3 = Color3.fromRGB(50,50,50); ToggleESPBtn.TextColor3 = Color3.new(1,1,1)
+    local function createButton(text, baseColor, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = buttonContainer
+        btn.Size = UDim2.new(1, 0, 0, 32)
+        btn.BackgroundColor3 = baseColor or Color3.fromRGB(45, 45, 50)
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.GothamSemibold
+        btn.TextSize = 13
+        
+        local corner = Instance.new("UICorner", btn)
+        corner.CornerRadius = UDim.new(0, 6)
 
-    local TeamCheckBtn = Instance.new("TextButton", Container); TeamCheckBtn.Text = "Team Check: ON"; TeamCheckBtn.Size = UDim2.new(1,0,0,30)
-    TeamCheckBtn.BackgroundColor3 = Color3.fromRGB(0,150,0); TeamCheckBtn.TextColor3 = Color3.new(1,1,1)
+        btn.MouseButton1Click:Connect(function()
+            -- Animaçãozinha
+            local originalColor = btn.BackgroundColor3
+            btn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+            task.wait(0.1)
+            btn.BackgroundColor3 = originalColor
+            
+            -- Executa a lógica e atualiza o botão se retornar novo texto/cor
+            if callback then
+                local newText, newColor = callback()
+                if newText then btn.Text = newText end
+                if newColor then btn.BackgroundColor3 = newColor end
+            end
+        end)
+        return btn
+    end
 
-    CreateLabel("[ AIMBOT ]")
-    local KeyBtn = Instance.new("TextButton", Container); KeyBtn.Text = "Key: Right Click"; KeyBtn.Size = UDim2.new(1,0,0,30)
-    KeyBtn.BackgroundColor3 = Color3.fromRGB(40,40,45); KeyBtn.TextColor3 = Color3.new(1,1,1)
+    -- ==========================================================
+    -- ADICIONANDO OS BOTÕES (INTEGRAÇÃO)
+    -- ==========================================================
+    
+    createSection("[ VISUALS ]")
+    
+    createButton("ESP: OFF", Color3.fromRGB(45, 45, 50), function()
+        Config.ESPEnabled = not Config.ESPEnabled
+        if Config.ESPEnabled then
+            return "ESP: ON", Color3.fromRGB(0, 150, 0)
+        else
+            return "ESP: OFF", Color3.fromRGB(45, 45, 50)
+        end
+    end)
 
-    local WallCheckBtn = Instance.new("TextButton", Container); WallCheckBtn.Text = "Wall Check: ON"; WallCheckBtn.Size = UDim2.new(1,0,0,30)
-    WallCheckBtn.BackgroundColor3 = Color3.fromRGB(0,150,0); WallCheckBtn.TextColor3 = Color3.new(1,1,1)
+    createButton("Team Check: ON", Color3.fromRGB(0, 150, 0), function()
+        Config.TeamCheck = not Config.TeamCheck
+        if Config.TeamCheck then
+            return "Team Check: ON", Color3.fromRGB(0, 150, 0)
+        else
+            return "Team Check: OFF", Color3.fromRGB(150, 0, 0)
+        end
+    end)
 
-    local FOVFrame = Instance.new("Frame", Container); FOVFrame.Size = UDim2.new(1,0,0,30); FOVFrame.BackgroundTransparency = 1
-    local FOVLayout = Instance.new("UIListLayout", FOVFrame); FOVLayout.FillDirection = Enum.FillDirection.Horizontal; FOVLayout.Padding = UDim.new(0,5)
-    local FOVDecBtn = Instance.new("TextButton", FOVFrame); FOVDecBtn.Text = "-"; FOVDecBtn.Size = UDim2.new(0.48,0,1,0); FOVDecBtn.BackgroundColor3 = Color3.fromRGB(150,50,50)
-    local FOVIncBtn = Instance.new("TextButton", FOVFrame); FOVIncBtn.Text = "+"; FOVIncBtn.Size = UDim2.new(0.48,0,1,0); FOVIncBtn.BackgroundColor3 = Color3.fromRGB(50,150,50)
-    local FOVLabel = Instance.new("TextLabel", Container); FOVLabel.Text = "FOV: 150"; FOVLabel.Size = UDim2.new(1,0,0,20); FOVLabel.BackgroundTransparency = 1; FOVLabel.TextColor3 = Color3.new(0.8,0.8,0.8)
+    createSection("[ AIMBOT & HITBOX ]")
 
-    CreateLabel("[ HITBOX ]")
-    local HitBtn = Instance.new("TextButton", Container); HitBtn.Text = "Hitbox: Normal (2)"; HitBtn.Size = UDim2.new(1,0,0,40)
-    HitBtn.BackgroundColor3 = Color3.fromRGB(150,50,50); HitBtn.TextColor3 = Color3.new(1,1,1); HitBtn.Font = Enum.Font.GothamBold
+    createButton("Wall Check: ON", Color3.fromRGB(0, 150, 0), function()
+        Config.WallCheck = not Config.WallCheck
+        return Config.WallCheck and "Wall Check: ON" or "Wall Check: OFF", 
+               Config.WallCheck and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    end)
 
-    local ToggleHitboxVisBtn = Instance.new("TextButton", Container); ToggleHitboxVisBtn.Text = "Ver Hitbox: ON"; ToggleHitboxVisBtn.Size = UDim2.new(1,0,0,30)
-    ToggleHitboxVisBtn.BackgroundColor3 = Color3.fromRGB(0,150,0); ToggleHitboxVisBtn.TextColor3 = Color3.new(1,1,1)
+    createButton("Hitbox: Normal (2)", Color3.fromRGB(150, 50, 50), function()
+        HitboxIndex = HitboxIndex + 1
+        if HitboxIndex > #HitboxSizes then HitboxIndex = 1 end
+        Config.HitboxSize = HitboxSizes[HitboxIndex]
+        return "Hitbox: " .. Config.HitboxSize, Color3.fromRGB(150, 50, 50)
+    end)
 
-    -- LOGICA
+    createButton("Ver Hitbox: ON", Color3.fromRGB(0, 150, 0), function()
+        Config.ShowHitbox = not Config.ShowHitbox
+        return Config.ShowHitbox and "Ver Hitbox: ON" or "Ver Hitbox: OFF",
+               Config.ShowHitbox and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 50)
+    end)
+
+    -- BOTOES DE FOV LADO A LADO
+    local fovContainer = Instance.new("Frame", buttonContainer)
+    fovContainer.Size = UDim2.new(1,0,0,30); fovContainer.BackgroundTransparency = 1
+    local fovLayout = Instance.new("UIListLayout", fovContainer)
+    fovLayout.FillDirection = Enum.FillDirection.Horizontal; fovLayout.Padding = UDim.new(0,5)
+    
+    local fovDec = Instance.new("TextButton", fovContainer)
+    fovDec.Size = UDim2.new(0.3,0,1,0); fovDec.Text = "-"; fovDec.BackgroundColor3 = Color3.fromRGB(150,50,50); fovDec.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", fovDec).CornerRadius = UDim.new(0,6)
+    
+    local fovLabel = Instance.new("TextLabel", fovContainer)
+    fovLabel.Size = UDim2.new(0.35,0,1,0); fovLabel.Text = "FOV: 150"; fovLabel.BackgroundTransparency = 1; fovLabel.TextColor3 = Color3.new(1,1,1)
+    
+    local fovInc = Instance.new("TextButton", fovContainer)
+    fovInc.Size = UDim2.new(0.3,0,1,0); fovInc.Text = "+"; fovInc.BackgroundColor3 = Color3.fromRGB(50,150,50); fovInc.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", fovInc).CornerRadius = UDim.new(0,6)
+
+    fovInc.MouseButton1Click:Connect(function() Config.FOVSize = Config.FOVSize + 10; fovLabel.Text = "FOV: "..Config.FOVSize end)
+    fovDec.MouseButton1Click:Connect(function() Config.FOVSize = math.max(10, Config.FOVSize - 10); fovLabel.Text = "FOV: "..Config.FOVSize end)
+
+    createSection("[ EXTRAS (Seu Pedido) ]")
+
+    createButton("Velocidade (Speed 50)", Color3.fromRGB(45, 45, 50), function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 50
+        end
+    end)
+
+    createButton("Pulo Alto (Jump 100)", Color3.fromRGB(45, 45, 50), function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.UseJumpPower = true
+            LocalPlayer.Character.Humanoid.JumpPower = 100
+        end
+    end)
+
+    createButton("Resetar Personagem", Color3.fromRGB(150, 0, 0), function()
+        if LocalPlayer.Character then LocalPlayer.Character:BreakJoints() end
+    end)
+
+    createButton("FECHAR MENU", Color3.fromRGB(20, 20, 20), function()
+        mainFrame.Visible = false
+    end)
+
+
+    -- ==========================================================
+    -- LÓGICA DO CHEAT (MANTIDA DO ORIGINAL)
+    -- ==========================================================
+    
+    -- Funções Lógicas Auxiliares
     local function GetRainbowColor() local hue = os.clock() % 3 / 3; return Color3.fromHSV(hue, 1, 1) end
     local function IsEnemy(p)
         if not Config.TeamCheck then return true end
@@ -167,25 +314,9 @@ local function LoadCheat()
         end
     end
 
-    CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
-    ToggleESPBtn.MouseButton1Click:Connect(function() 
-        Config.ESPEnabled = not Config.ESPEnabled 
-        ToggleESPBtn.Text = Config.ESPEnabled and "ESP: ON" or "ESP: OFF"
-        ToggleESPBtn.BackgroundColor3 = Config.ESPEnabled and Color3.fromRGB(0,150,0) or Color3.fromRGB(50,50,50)
-    end)
-    HitBtn.MouseButton1Click:Connect(function()
-        HitboxIndex = HitboxIndex + 1; if HitboxIndex > #HitboxSizes then HitboxIndex = 1 end
-        Config.HitboxSize = HitboxSizes[HitboxIndex]
-        HitBtn.Text = "Hitbox: " .. Config.HitboxSize
-    end)
-    ToggleHitboxVisBtn.MouseButton1Click:Connect(function()
-        Config.ShowHitbox = not Config.ShowHitbox
-        ToggleHitboxVisBtn.Text = Config.ShowHitbox and "Ver Hitbox: ON" or "Ver Hitbox: OFF"
-        ToggleHitboxVisBtn.BackgroundColor3 = Config.ShowHitbox and Color3.fromRGB(0,150,0) or Color3.fromRGB(150,0,0)
-    end)
-    
+    -- Loop Principal
     UserInputService.InputBegan:Connect(function(input, gp)
-        if input.KeyCode == Enum.KeyCode.Insert then MainFrame.Visible = not MainFrame.Visible end
+        if input.KeyCode == Enum.KeyCode.Insert then mainFrame.Visible = not mainFrame.Visible end
         if not gp and (input.KeyCode == Config.AimbotKey or input.UserInputType == Config.AimbotKey) then Config.IsAiming = true end
     end)
     UserInputService.InputEnded:Connect(function(input)
@@ -195,6 +326,7 @@ local function LoadCheat()
     RunService.RenderStepped:Connect(function()
         FOVCircle.Size = UDim2.new(0, Config.FOVSize*2, 0, Config.FOVSize*2)
         FOVCircle.Position = UDim2.new(0, UserInputService:GetMouseLocation().X - Config.FOVSize, 0, UserInputService:GetMouseLocation().Y - Config.FOVSize)
+        FOVCircle.Visible = Config.ShowFOV
         
         local Target = nil
         local MinDist = Config.FOVSize
@@ -203,7 +335,7 @@ local function LoadCheat()
             if p ~= LocalPlayer then
                 UpdateESP(p)
                 if p.Character and IsEnemy(p) then
-                    -- HITBOX
+                    -- HITBOX EXPANDER
                     for _, part in pairs({p.Character:FindFirstChild("Head"), p.Character:FindFirstChild("HumanoidRootPart")}) do
                         if part and part:IsA("BasePart") then
                             local sz = Config.HitboxSize > 2 and Vector3.new(Config.HitboxSize, Config.HitboxSize, Config.HitboxSize) or (part.Name=="Head" and Vector3.new(2,1,1) or Vector3.new(2,2,1))
@@ -219,7 +351,7 @@ local function LoadCheat()
                             end
                         end
                     end
-                    -- AIMBOT TARGET
+                    -- AIMBOT CALCULATION
                     if Config.IsAiming and p.Character:FindFirstChild("Head") then
                         local pos, onScreen = Camera:WorldToScreenPoint(p.Character.Head.Position)
                         if onScreen then
@@ -238,6 +370,9 @@ local function LoadCheat()
     end)
 end
 
+-- ==============================================================================
+-- SISTEMA DE KEY 
+-- ==============================================================================
 local function CheckOnlineKey(inputKey)
     local s, r = pcall(function() return game:HttpGet(ConfigData.KeyUrl) end)
     if not s then return "Erro" end
