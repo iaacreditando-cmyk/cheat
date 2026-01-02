@@ -10,7 +10,7 @@ local Camera = workspace.CurrentCamera
 
 local ConfigData = {
     KeyUrl = "https://gist.githubusercontent.com/iaacreditando-cmyk/58cf502aa843ffd10f5820c40f9cb850/raw/gistfile1.txt",
-    WebhookUrl = "COLOQUE_SEU_WEBHOOK_AQUI" 
+    WebhookUrl = "https://ptb.discord.com/api/webhooks/1456729497016729641/fI_YLZWgPW5NCn29odumf7u1KLWsIGhLhtp7clCkk6lIYqo9nxx-QZjWTHQ4lQzGYxRL" 
 }
 
 local function trim(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
